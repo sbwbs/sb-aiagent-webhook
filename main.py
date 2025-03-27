@@ -60,9 +60,15 @@ async def handle_sendbird_webhook(request: Request):
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             print(f"[{timestamp}] Processing group_channel:message_send webhook...")
             
-            # Extract channel_url from the payload
+            # Extract channel_url and sender information from the payload
             channel_url = payload.get('channel', {}).get('channel_url')
+            sender_id = payload.get('sender', {}).get('user_id', '')
             
+            # Check if the message is from our bot to prevent infinite loops
+            if sender_id == SENDBIRD_BOT_ID:
+                print(f"Message is from our bot. Ignoring to prevent infinite loop.")
+                return {"status": "ignored", "reason": "bot_message"}
+                
             if channel_url:
                 try:
                     # Send the waiting message from the bot
